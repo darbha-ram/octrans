@@ -1,6 +1,5 @@
-# octranpso
+# octrans
 Spring Boot Application to track OC Transpo Bus Cancellations
-
 (c) 2019- Ram Darbha. All Rights Reserved.
 
 OC Transpo is the public transit system of Ottawa, Canada.
