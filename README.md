@@ -92,3 +92,18 @@ This project is setup to build with gradle.
     $ java -jar build/libs/ramd-octrans-0.2.0.jar
 
 After service is started, issue HTTP request to port 8080, e.g. `http://localhost:8080/ocapi/v1/bus/95/all`.
+
+## Troubleshooting
+
+### Eclipse dependencies not found
+If Eclipse failing to find dependencies even though `build.gradle` is up to date, it is likely because Eclipse `.project` is out of date.  To update Eclipse project:
+
+    $ ./gradlew cleanEclipse
+    $ ./gradlew eclipse
+
+### HTTP Requests returning 404
+If a class has been annotated `@RestController` but HTTP Requests still fail, it is likely because that class isn't being found by Spring.  Recommended Spring Boot approach is to have the top-level application (`@SpringBootApplication`) class in a non-default package (e.g. `app`) and the controller class in a sub-package (e.g. `app.controller`).  If that code layout is not feasible, alternately, the top-level class can be explicitly annotated like so:
+
+    @SpringBootApplication
+    @ComponentScan(basePackageClasses = ApiV1Controller.class)
+    public class Application {
