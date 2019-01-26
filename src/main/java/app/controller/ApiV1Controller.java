@@ -2,9 +2,11 @@ package app.controller;
 
 import java.util.List;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.model.Cancellation;
@@ -42,9 +44,14 @@ public class ApiV1Controller {
     
     // use non capturing group in ampm regex
     @RequestMapping(base_s + "bus/{busnum:[\\d]+}/{ampm:^(?:am|pm|all)$}")
-    public List<Cancellation> getBus(@PathVariable int busnum, @PathVariable String ampm)
+    public List<Cancellation> getBus(@PathVariable int busnum, @PathVariable String ampm,
+        @RequestParam(required=false) String sd,
+        @RequestParam(required=false) String ed)
     {
-    	return model_m.getBus(busnum, ampm, null, null);
+    	// TODO - add @Valid @Pattern to validate sd & ed
+    	
+    	// both sd & ed should be of format: "yyyy-mm-dd"
+    	return model_m.getBus(busnum, ampm, sd, ed);
     }
     
     
