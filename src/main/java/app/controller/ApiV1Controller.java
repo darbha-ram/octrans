@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.model.Cancellation;
@@ -65,20 +64,6 @@ public class ApiV1Controller {
     }
     
     
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    //
-    /*
-    private String getTime(final String ampm)
-    {
-        if ((ampm == null) || (ampm.isEmpty()))
-        	return "both";
-        else if (ampm.equalsIgnoreCase(am_s))
-        	return am_s;
-        else if (ampm.equalsIgnoreCase(pm_s))
-        	return pm_s;
-        else return null;    	
-    }
-    */
     
 
 }

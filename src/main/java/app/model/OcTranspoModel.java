@@ -26,17 +26,33 @@ public class OcTranspoModel {
     @Autowired
     private JdbcTemplate jt_m;
 
+    //
+    // Query strings
+    //
+    
+    private static final String hourClause_s = " AND DATEPART(HH, cancelledstarttime) ";
+    private static final String am_s = hourClause_s + " < 12 ";
+    private static final String pm_s = hourClause_s + " >= 12 ";
+    		
+    private static final String getBus_s = "SELECT * FROM buscancellations WHERE busnumber = ? ";
+
     
     public List<Cancellation> getBus(final int busnum, final String ampm,
     	final LocalDateTime sd, final LocalDateTime ed)
     {
         log.info("getBus: entry for bus " + busnum);
 
-    	// TODO - implement ampm, sd, ed
+        String queryString = getBus_s;
+        if (ampm.equalsIgnoreCase("am"))
+        	queryString += am_s;
+        else if (ampm.equalsIgnoreCase("pm"))
+        	queryString += pm_s;
+        
+    	// TODO - implement sd, ed
     	List<Cancellation> cancels = new ArrayList<Cancellation>();
     	
         jt_m.query(
-            "SELECT * FROM buscancellations WHERE busnumber = ?", new Object[] { busnum }, (rs, rowNum) ->
+            queryString, new Object[] { busnum }, (rs, rowNum) ->
             new Cancellation(
                 rs.getInt("busnumber"),
                 rs.getString("busname"),
