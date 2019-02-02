@@ -4,7 +4,7 @@ Spring Boot Application to track OC Transpo Bus Cancellations
 
 OC Transpo is the public transit system of Ottawa, Canada.
 
-This application uses JDBC to interface to an Azure SQL DB containing data about cancelled OC Transpo buses.  (The Azure DB is populated in realtime by another Azure application that is triggered by tweets from the OC Transpo account, outside the scope of this project.)  This application presents a REST API in the frontend to allow a user to determine cancellations of specific bus routes,  the most or least cancelled buses.  Each API call can be restricted to AM or PM or all day, and to a specific time interval (fenced by start date and end date).  Both start and end date parameters are optional.  If only start date is given, cancellation on or after that date are returned.  If only end date is given, cancellation up to and including that date are returned.  If both dates are given, cancellations in that time interval are returned.  If they are both unspecified, query is executed over all the DB contents from time of inception (August 2018) to the latest available data.  Note, start and end date must be in the format "yyyy-mm-dd", with leading zeroes as needed, e.g. `2018-2-17` is invalid.
+This application uses JDBC to interface to an Azure SQL DB containing data about cancelled OC Transpo buses.  (The SQL DB is populated in realtime by another Azure application that is triggered by tweets from the OC Transpo account, outside the scope of this project.)  This application presents a REST API in the frontend to allow a user to determine cancellations of specific bus routes,  the most or least cancelled buses.  Each API call can be restricted to AM or PM or all day, and to a specific time interval (fenced by start date and end date).  Both start and end date parameters are optional.  If only start date is given, cancellation on or after that date are returned.  If only end date is given, cancellation up to and including that date are returned.  If both dates are given, cancellations in that time interval are returned.  If they are both unspecified, query is executed over all the DB contents from time of inception (August 2018) to the latest available data.  Note, start and end date must be in the format "yyyy-mm-dd", with leading zeroes as needed, e.g. `2018-2-17` is invalid.
 
 ## REST API
 
@@ -13,6 +13,9 @@ Below are examples of API invocations and corresponding responses.  Note the API
 Base URL: `/ocapi/v1/`
 
 ### Specified Bus
+
+API: `ocapi/v1/bus/<busnum>/(am|pm|all)[?[sd=yyyy-mm-dd&]ed=yyyy-mm-dd]`
+
 
 To find all cancellations of bus route 265:
  
@@ -28,7 +31,7 @@ To find evening cancellations of bus route 265:
 
 To find all evening cancellations between 1-Nov-18 and 31-Dec-18:
  
-`ocapi/v1/bus/265/pm?sd=2018-01-21&ed=2018-06-28`
+`ocapi/v1/bus/265/pm?sd=2018-11-01&ed=2018-12-31`
 
 For all above invocations, the response body is a JSON array, each element of which has information fields about a specific cancellation of the requested route: bus number, bus name, startdate, start location and delay to the next bus.
 
@@ -51,29 +54,36 @@ For all above invocations, the response body is a JSON array, each element of wh
 
 ### Most Cancellations
 
-To find 8 routes with the most cancellations:
+API: `ocapi/v1/most/<num>/(am|pm|all)[?[sd=yyyy-mm-dd&]ed=yyyy-mm-dd]`
+
+To find 8 routes with the most cancellations over all time to the present:
  
 `ocapi/v1/most/8/all`
 
-To find 6 routes with the most morning cancellations:
+To find 6 routes with the most morning cancellations in September 2018:
  
-`ocapi/v1/most/6/am`
+`ocapi/v1/most/6/am?sd=2018-09-01&ed=2018-09-30`
 
-To find 10 routes with the most afternoon cancellations until 31-Dec-18:
+To list all routes by their #afternoon cancellations, from the beginning until 5-Dec-18:
  
-`ocapi/v1/most/10/pm?ed=2018-12-31`
+`ocapi/v1/most/0/pm?ed=2018-12-05`
 
 
 ### Least Cancellations
 
-To find 5 routes with the least cancellations:
- 
-`ocapi/v1/least/5/all`
+API: `ocapi/v1/least/<num>/(am|pm|all)[?[sd=yyyy-mm-dd&]ed=yyyy-mm-dd]`
 
-To find 3 routes with the least morning cancellations starting 1-Nov-18:
+To find 5 routes with the least afternoon cancellations over all time:
  
-`ocapi/v1/least/3/am?sd=2018-11-01`
+`ocapi/v1/least/5/pm`
 
+To list all routes by their morning cancellations, starting 1-Nov-18 to the present:
+ 
+`ocapi/v1/least/0/am?sd=2018-11-01`
+
+Note, setting `<num>` to zero returns all routes, i.e. `most` and `least` APIs return the same results,
+although they may be ordered differently.  The am/pm/all flag and start/end dates work identically for
+all the APIs, the examples above being different only to illustrate the variety of possible queries.
 
 
 ## Dev/Build Environment

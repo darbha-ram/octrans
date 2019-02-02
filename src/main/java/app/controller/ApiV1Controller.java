@@ -1,7 +1,8 @@
 package app.controller;
 
 import java.util.List;
-
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.model.Cancellation;
+import app.model.NumCancels;
 import app.model.OcTranspoModel;
 
 
@@ -23,16 +25,17 @@ import app.model.OcTranspoModel;
  *     
  *     most/<n>                   -- 'n' buses with the most cancellations
  *     least/<n>                  -- 'n' buses with the least cancellations
- *         .. ?sd=xxx&ed=yyy      -- 'n' most or least cancelled buses in given time frame 
+ *         .. ?sd=xxx&ed=yyy      -- 'n' most or least cancelled buses in given time frame
  */
 
 @RestController
 public class ApiV1Controller {
 
-    public static final String base_s = "/ocapi/v1/";
-    public static final String am_s = "am";
-    public static final String pm_s = "pm";
+    private static final String base_s = "/ocapi/v1/";
+    private static final String dateRegex_s = "\\d\\d\\d\\d\\-\\d\\d\\-\\d\\d"; // yyyy-mm-dd
+    private static final Pattern pat_s = Pattern.compile(dateRegex_s);
 
+    
     @Autowired
     private OcTranspoModel model_m;
     
@@ -42,32 +45,70 @@ public class ApiV1Controller {
         return "Root";
     }
     
+    
     // use non capturing group in ampm regex
     @RequestMapping(base_s + "bus/{busnum:[\\d]+}/{ampm:^(?:am|pm|all)$}")
     public List<Cancellation> getBus(@PathVariable int busnum, @PathVariable String ampm,
         @RequestParam(required=false) String sd,
         @RequestParam(required=false) String ed)
     {
-    	// TODO - add @Valid @Pattern to validate sd & ed
+    	// TODO - try to use annotations above @Valid @Pattern to validate sd & ed
+
+    	Matcher m = null;
+    	if (sd != null)
+    	{
+        	m = pat_s.matcher(sd);
+        	if (!m.matches()) sd = null;
+    	}
+    	if (ed != null)
+    	{
+        	m = pat_s.matcher(ed);
+        	if (!m.matches()) ed = null;
+    	}
     	
-    	// both sd & ed should be of format: "yyyy-mm-dd"
     	return model_m.getBus(busnum, ampm, sd, ed);
     }
     
     
     @RequestMapping(base_s + "most/{num:[\\d]+}/{ampm:^(?:am|pm|all)$}")
-    public String getMost(@PathVariable int num, @PathVariable String ampm)
+    public List<NumCancels> getMost(@PathVariable int num, @PathVariable String ampm,
+        @RequestParam(required=false) String sd,
+        @RequestParam(required=false) String ed)
     {
+    	Matcher m = null;
+    	if (sd != null)
+    	{
+        	m = pat_s.matcher(sd);
+        	if (!m.matches()) sd = null;
+    	}
+    	if (ed != null)
+    	{
+        	m = pat_s.matcher(ed);
+        	if (!m.matches()) ed = null;
+    	}
 
-        return "Most  " + num + " received ";
+        return model_m.getMostLeast(num, ampm, sd, ed, false);
     }
     
     
     @RequestMapping(base_s + "least/{num:[\\d]+}/{ampm:^(?:am|pm|all)$}")
-    public String getLeast(@PathVariable int num, @PathVariable String ampm)
+    public List<NumCancels> getLeast(@PathVariable int num, @PathVariable String ampm,
+        @RequestParam(required=false) String sd,
+        @RequestParam(required=false) String ed)
     {
+    	Matcher m = null;
+    	if (sd != null)
+    	{
+        	m = pat_s.matcher(sd);
+        	if (!m.matches()) sd = null;
+    	}
+    	if (ed != null)
+    	{
+        	m = pat_s.matcher(ed);
+        	if (!m.matches()) ed = null;
+    	}
 
-        return "Least  " + num + " received  ";
+        return model_m.getMostLeast(num, ampm, sd, ed, true);
     }
     
     
