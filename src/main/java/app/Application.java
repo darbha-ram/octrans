@@ -18,7 +18,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 //@ComponentScan(basePackageClasses = ApiV1Controller.class)
 public class Application implements CommandLineRunner {
 
-	private static final String Version_ms = "v0.3 17Jan19";
+	private static final String Version_ms = "v1.0 3Feb19";
     private static final Logger log = LoggerFactory.getLogger(Application.class);
 
     public static void main(String args[]) {
