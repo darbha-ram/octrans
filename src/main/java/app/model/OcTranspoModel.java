@@ -35,7 +35,8 @@ public class OcTranspoModel {
     private static final String getBus_s = "SELECT * FROM buscancellations WHERE busnumber = ? ";
     private static final String select_s = "SELECT ";
     private static final String top_n_s  = " TOP (?) ";
-    private static final String getNumCancels_s = " busnumber, count(1) as num from buscancellations WHERE busnumber > 0 ";
+    private static final String getCounts_s = " busnumber, count(1) as num from buscancellations WHERE busnumber > 0 ";
+    private static final String getDelays_s = " busnumber, sum(nextminutes) as num from buscancellations WHERE busnumber > 0 ";
 
     // am-pm WHERE clauses
     private static final String hourClause_s = " DATEPART(HH, cancelledstarttime) ";
@@ -98,31 +99,31 @@ public class OcTranspoModel {
 	
 	
     /**
-     * getMost - given a number e.g. 15, am/pm/all flag, optional start and end dates, find the
-     *     top 15 buses with the most cancellations during that time of day, between start & end dates. 
+     * getCounts - given a number e.g. 15, am/pm/all flag, optional start and end dates, find the
+     *     top (or bottom) 15 buses with the most (or least) cancellations during that time of day,
+     *     between start & end dates. 
      * @param num - number of entries to return
      * @param ampm - "am", "pm" or "all"
      * @param startdate in yyyy-mm-dd e.g. 2018-01-04
      * @param enddate in yyyy-mm-dd e.g. 2018-02-25
+     * @param least true if querying for least, false if querying for most
      * @return - list of records, each record holding bus no. and its no. cancellations in interval.
      */
-    public List<NumCancels> getMostLeast(final int num, final String ampm,
+    public List<BusRecord> getCounts(final int num, final String ampm,
     	final String startdate, final String enddate, final boolean least)
     {
-        log.info("getMost: top " + num + ", " + ampm + ", " + startdate + " ~ " + enddate);
+        log.info("getCounts: top " + num + ", " + ampm + ", " + startdate + " ~ " + enddate + (least?" :L":" :M"));
         
         List<Object> queryArgsList = new ArrayList<Object>();
 
         String queryString = null;
         if (num > 0)
         {
-            queryString = select_s + top_n_s + getNumCancels_s;
+            queryString = select_s + top_n_s + getCounts_s;
             queryArgsList.add(num);
         }
         else
-        {
-            queryString = select_s + getNumCancels_s;
-        }
+            queryString = select_s + getCounts_s;
         
         queryString = processTimeInputs(queryString, queryArgsList, ampm, startdate, enddate);
         
@@ -137,16 +138,70 @@ public class OcTranspoModel {
         queryArgs = queryArgsList.toArray(queryArgs);
         
         // return set
-    	List<NumCancels> tuples = new ArrayList<NumCancels>();
+    	List<BusRecord> tuples = new ArrayList<BusRecord>();
     	
         jt_m.query(
             queryString, queryArgs, (rs, rowNum) ->
-            new NumCancels(
+            new BusRecord(
                 rs.getInt("busnumber"),
                 rs.getInt("num"))
         ).forEach(can -> tuples.add(can));
         
-        log.info("getMost: got " + tuples.size() + " rows.");
+        log.info("getCounts: got " + tuples.size() + " rows.");
+        return tuples;
+    }
+
+    
+    /**
+     * getDelays - given a number e.g. 15, am/pm/all flag, optional start and end dates, find the
+     *     top (or bottom) 15 buses with the most (or least) total delay during that time of day,
+     *     between start & end dates. 
+     * @param num - number of entries to return
+     * @param ampm - "am", "pm" or "all"
+     * @param startdate in yyyy-mm-dd e.g. 2018-01-04
+     * @param enddate in yyyy-mm-dd e.g. 2018-02-25
+     * @param least true if querying for least, false if querying for most
+     * @return - list of records, each record holding bus no. and its total delay in minutes.
+     */
+    public List<BusRecord> getDelays(final int num, final String ampm,
+    	final String startdate, final String enddate, final boolean least)
+    {
+        log.info("getDelays: top " + num + ", " + ampm + ", " + startdate + " ~ " + enddate + (least?" :L":" :M"));
+        
+        List<Object> queryArgsList = new ArrayList<Object>();
+
+        String queryString = null;
+        if (num > 0)
+        {
+            queryString = select_s + top_n_s + getDelays_s;
+            queryArgsList.add(num);
+        }
+        else
+            queryString = select_s + getDelays_s;
+        
+        queryString = processTimeInputs(queryString, queryArgsList, ampm, startdate, enddate);
+        
+        // finally, append GROUP & ORDER suffixes
+        if (least)
+        	queryString += groupOrderSuffix_s + least_s;
+        else
+        	queryString += groupOrderSuffix_s + most_s;
+
+        // convert list to array, so it can be used in query
+        Object[] queryArgs = new Object[queryArgsList.size()];
+        queryArgs = queryArgsList.toArray(queryArgs);
+        
+        // return set
+    	List<BusRecord> tuples = new ArrayList<BusRecord>();
+    	
+        jt_m.query(
+            queryString, queryArgs, (rs, rowNum) ->
+            new BusRecord(
+                rs.getInt("busnumber"),
+                rs.getInt("num"))
+        ).forEach(can -> tuples.add(can));
+        
+        log.info("getDelays: got " + tuples.size() + " rows.");
         return tuples;
     }
 

@@ -7,24 +7,24 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 //
 
 @JsonIgnoreProperties(ignoreUnknown = false)
-public class NumCancels {
+public class BusRecord {
 
 	private int busnumber;
-	private int numcancels;
+	private int value;
 	
-	public NumCancels(int busnum, int cancels)
+	public BusRecord(int busnum, int cancels)
 	{
 		busnumber = busnum;
-		numcancels = cancels;
+		value = cancels;
 	}
 	
 	// getters - needed by Jackson
 	public int getbusnumber() { return busnumber; }
-	public int getnumcancels() { return numcancels; }
+	public int getvalue() { return value; }
 	
 	@Override
 	public String toString()
 	{
-		return "#" + busnumber + ": [" + numcancels + "]";
+		return "#" + busnumber + ": [" + value + "]";
 	}
 }
